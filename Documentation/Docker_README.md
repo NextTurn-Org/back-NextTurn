@@ -52,7 +52,7 @@ Une fois les logs terminés (ligne `Apache ... resuming normal operations`) :
 
 ```
 back-NextTurn/
-├── docker/php/
+├── docker/
 │   ├── Dockerfile        # image PHP 8.4 + Apache + Composer
 │   ├── entrypoint.sh     # composer install automatique + droits d'Apache
 │   └── vhost.conf        # Apache pointe sur app/public

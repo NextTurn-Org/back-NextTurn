@@ -1,6 +1,6 @@
 services :
   php:
-    build: ./docker/php
+    build: ./docker
     ports:
       - "8080:80"
     volumes:
