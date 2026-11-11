@@ -3,17 +3,22 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
 class User
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
+    #[ORM\Column(type: UuidType::NAME, unique: true)]
+    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
+    private ?Uuid $id = null;
 
     #[ORM\Column(length: 255)]
     private ?string $email = null;
@@ -27,7 +32,28 @@ class User
     #[ORM\OneToOne(mappedBy: 'users', cascade: ['persist', 'remove'])]
     private ?UserDetails $userDetails = null;
 
-    public function getId(): ?int
+    #[ORM\OneToOne(mappedBy: 'users', cascade: ['persist', 'remove'])]
+    private ?Role $role = null;
+
+    /**
+     * @var Collection<int, UserGroupe>
+     */
+    #[ORM\OneToMany(targetEntity: UserGroupe::class, mappedBy: 'users')]
+    private Collection $userGroupes;
+
+    /**
+     * @var Collection<int, EventAttendee>
+     */
+    #[ORM\OneToMany(targetEntity: EventAttendee::class, mappedBy: 'users')]
+    private Collection $eventAttendees;
+
+    public function __construct()
+    {
+        $this->userGroupes = new ArrayCollection();
+        $this->eventAttendees = new ArrayCollection();
+    }
+
+    public function getId(): ?Uuid
     {
         return $this->id;
     }
@@ -81,6 +107,83 @@ class User
         }
 
         $this->userDetails = $userDetails;
+
+        return $this;
+    }
+
+    public function getRole(): ?Role
+    {
+        return $this->role;
+    }
+
+    public function setRole(Role $role): static
+    {
+        // set the owning side of the relation if necessary
+        if ($role->getUsers() !== $this) {
+            $role->setUsers($this);
+        }
+
+        $this->role = $role;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, UserGroupe>
+     */
+    public function getUserGroupes(): Collection
+    {
+        return $this->userGroupes;
+    }
+
+    public function addUserGroupe(UserGroupe $userGroupe): static
+    {
+        if (!$this->userGroupes->contains($userGroupe)) {
+            $this->userGroupes->add($userGroupe);
+            $userGroupe->setUsers($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUserGroupe(UserGroupe $userGroupe): static
+    {
+        if ($this->userGroupes->removeElement($userGroupe)) {
+            // set the owning side to null (unless already changed)
+            if ($userGroupe->getUsers() === $this) {
+                $userGroupe->setUsers(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, EventAttendee>
+     */
+    public function getEventAttendees(): Collection
+    {
+        return $this->eventAttendees;
+    }
+
+    public function addEventAttendee(EventAttendee $eventAttendee): static
+    {
+        if (!$this->eventAttendees->contains($eventAttendee)) {
+            $this->eventAttendees->add($eventAttendee);
+            $eventAttendee->setUsers($this);
+        }
+
+        return $this;
+    }
+
+    public function removeEventAttendee(EventAttendee $eventAttendee): static
+    {
+        if ($this->eventAttendees->removeElement($eventAttendee)) {
+            // set the owning side to null (unless already changed)
+            if ($eventAttendee->getUsers() === $this) {
+                $eventAttendee->setUsers(null);
+            }
+        }
 
         return $this;
     }

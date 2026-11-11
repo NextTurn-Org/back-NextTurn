@@ -8,10 +8,11 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: UserDetailsRepository::class)]
 class UserDetails
 {
+    // PK = FK : l'identifiant de UserDetails est celui du User
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
+    #[ORM\OneToOne(inversedBy: 'userDetails', cascade: ['persist', 'remove'])]
+    #[ORM\JoinColumn(name: 'user_id', nullable: false)]
+    private ?User $users = null;
 
     #[ORM\Column(length: 80)]
     private ?string $displayName = null;
@@ -21,15 +22,6 @@ class UserDetails
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $bio = null;
-
-    #[ORM\OneToOne(inversedBy: 'userDetails', cascade: ['persist', 'remove'])]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?User $users = null;
-
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
 
     public function getDisplayName(): ?string
     {
@@ -48,7 +40,7 @@ class UserDetails
         return $this->avatarUrl;
     }
 
-    public function setAvatarUrl(string $avatarUrl): static
+    public function setAvatarUrl(?string $avatarUrl): static
     {
         $this->avatarUrl = $avatarUrl;
 
